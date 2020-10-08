@@ -6,7 +6,7 @@
 
 ## Overview
 
-In these  tutorial  we are going to build a fire detation model based on videos  , since videos is a very important  soruce for rish informations and there is  deffrent kind of appliactions  that  can help  to improve socity life   , I choice fire detaction   since I have published a paper  in 2019  for that topic and I was need to addrress some of  topics that I faced when I build the detactor  
+In these  tutorial  we are going to build a fire detation model based on videos  , since videos is a very important  soruce for rish informations and there is  deffrent kind of appliactions  that  can help  to improve socity life   , I choice fire detaction   since I have published a paper  in 2019  for that topic and I was need to addrress some of  topics that I faced when I build the detactor  (most of the online pytorch based  solution for  feeding  4d tensor to conv2d is  empgous and  also not working well  i choice the topic  to give you well tested solution that you can work with any video data and use the cnn+lstm  with easy and efficaint way )
 
 but before we deep dive  i want to declare that  Fire recognition in video is a problem of spatiotemporal features classification once a model can recognize the spatiotemporal features correctly; it can achieve a good result. 
 The most common ways in deep-learning approach to capture and learn spatiotemporal features are: -
@@ -44,9 +44,9 @@ https://zenodo.org/record/836749#.X3zWP3Vficw     https://mivia.unisa.it/dataset
 
 handling  video frames data sets wuth an   efficient data generation scheme that consume a less memory can be done  with e Dataset class (torch.utils.data.Dataset) in PyTorch  the idea  is  to privde a class that overriding two subclass functions
 
- __len__  – returns the size of the dataset
+   __len__  – returns the size of the dataset
 
-__getitem__  – returns a sample from the dataset given an index.
+  __getitem__  – returns a sample from the dataset given an index.
 
 
 the main code or the scelton code   for the data is
@@ -148,13 +148,8 @@ def capture(filename,timesep,rgb,h,w):
 ```
 
 
-<!-- When an image, such as a screenshot, is quicker to interpret than descriptive text, put the screenshot first, otherwise lead with the text. -->
 
-![alt text](https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg "Image title which describes image.")
-
-Brief instructions explaining how to interpret the image.
-
-### Step 2: understand timedistrbution warpper 
+### Step 2: understand timedistrbution 
 
 as we know  that  most of the pre-trained Conv  based models are Conv2d  where it accept only  a 3d shape  (rgb , height , width )
 while video data  each video is a 4d tensor  (frames , rgb , height , width )   ,  also  we know that   we need the pretrained model for spatial feature extraction and will feed it output to a temproal   layer such as (lstm)  
@@ -163,7 +158,8 @@ if we ignore the batch size from our calculations than The Time Distribution ope
 in code the idea is so simple  we just itreat over each frame and feed it  as frame by frame item t the conv base model
 from that   i have two  idea to implment this
 
-the first one   ( consume more memory from the gpu  but learn better then the second one)
+1. the first method   ( consume more memory from the gpu  )  the idea is to change the array from (batch,frame,rgb,height ,width)  to  (batch*frame , rgb,height ,width)   so each frame will by an itm that feed to the basemodel
+the main idea  can bee seen in this code
 
 ```
  # reshape input  to be (batch_size * timesteps, input_size)
@@ -175,7 +171,124 @@ the first one   ( consume more memory from the gpu  but learn better then the se
  # make the new correct shape (batch_size , timesteps , output_size)
  x = x.contiguous().view(batch_size , time_steps , x.size(-1))  # this x is now ready to be entred or feed into lstm layer
 ```
+ now if we want to apply this into a full model class  ( the model is so simple to make it  easy to understand ) the code will be like this
  
+```
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        num_classes = 1
+        dr_rate= 0.2
+        pretrained = True
+        rnn_hidden_size = 30
+        rnn_num_layers = 2
+        #get a pretrained vgg19 model ( taking only the cnn layers and fine tun them)
+        baseModel = models.vgg19(pretrained=pretrained).features  
+        i = 0
+        for child in baseModel.children():
+            if i < 28:
+                for param in child.parameters():
+                    param.requires_grad = False
+            else:
+                for param in child.parameters():
+                    param.requires_grad = True
+            i +=1
+
+        num_features = 12800
+        self.baseModel = baseModel
+        self.dropout= nn.Dropout(dr_rate)
+        self.rnn = nn.LSTM(num_features, rnn_hidden_size, rnn_num_layers , batch_first=True)
+        self.fc2 = nn.Linear(30, 256)
+        self.fc3 = nn.Linear(256, num_classes)
+    def forward(self, x):
+        batch_size, time_steps, C, H, W = x.size()
+        # reshape input  to be (batch_size * timesteps, input_size)
+        x = x.contiguous().view(batch_size * time_steps, C, H, W)
+        x = self.baseModel(x)
+        x = x.view(x.size(0), -1)
+        #make output as  ( samples, timesteps, output_size)
+        x = x.contiguous().view(batch_size , time_steps , x.size(-1))
+        x , (hn, cn) = self.rnn(x)
+        x = F.relu(self.fc2(x[:, -1, :])) # get output of the last  lstm not full sequence
+        x = self.dropout(x)
+        x = self.fc3(x)
+        return x 
+
+``` 
+
+
+2. the second options is to loop over frames   ( less memory  but slower than option one also noted that the option one  is  better at learning)
+the main idea  can bee seen in this code
+
+
+```
+        batch_size, time_steps, C, H, W = x.size() #get shape of the input
+        output = []
+        #loop over each frame
+        for i in range(time_steps):
+            #input one frame at a time into the basemodel
+            x_t = self.baseModel(x[:, i, :, :, :])
+            # Flatten the output
+            x_t = x_t.view(x_t.size(0), -1)
+            #make a list of tensors for the given smaples 
+            output.append(x_t)
+        #end loop  
+        #make output as  ( samples, timesteps, output_size)
+        x = torch.stack(output, dim=0).transpose_(0, 1)   # this x is now ready to be entred or feed into lstm layer
+```
+ now if we want to apply this into a full model class  ( the model is so simple to make it  easy to understand ) the code will be like this
+
+
+```
+
+class Net2(nn.Module):
+    def __init__(self):
+        super(Net2, self).__init__()
+        num_classes = 1
+        dr_rate= 0.2
+        pretrained = True
+        rnn_hidden_size = 30
+        rnn_num_layers = 2
+        baseModel = models.vgg19(pretrained=pretrained).features
+        i = 0
+        for child in baseModel.children():
+            if i < 28:
+                for param in child.parameters():
+                    param.requires_grad = False
+            else:
+                for param in child.parameters():
+                    param.requires_grad = True
+            i +=1
+
+        num_features = 12800
+        self.baseModel = baseModel
+        self.dropout= nn.Dropout(dr_rate)
+        self.rnn = nn.LSTM(num_features, rnn_hidden_size, rnn_num_layers , batch_first=True)
+        self.fc1 = nn.Linear(30, 256)
+        self.fc2 = nn.Linear(256, num_classes)
+    def forward(self, x):
+        batch_size, time_steps, C, H, W = x.size()
+        output = []
+        for i in range(time_steps):
+            #input one frame at a time into the basemodel
+            x_t = self.baseModel(x[:, i, :, :, :])
+            # Flatten the output
+            x_t = x_t.view(x_t.size(0), -1)
+            output.append(x_t)
+        #end loop
+        #make output as  ( samples, timesteps, output_size)
+        x = torch.stack(output, dim=0).transpose_(0, 1)
+        output = None # clear var to reduce data  in memory
+        x_t = None  # clear var to reduce data  in memory
+        x , (hn, cn) = self.rnn(x)
+        x = F.relu(self.fc1(x[:, -1, :])) # get output of the last  lstm not full sequence
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return x 
+```
+
+
 1. Substep A
 1. Substep B
 1. Substep C
