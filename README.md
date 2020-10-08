@@ -40,7 +40,7 @@ https://zenodo.org/record/836749#.X3zWP3Vficw     https://mivia.unisa.it/dataset
   
 ## Step-by-step guide
 
-### Step 1: Costume Data loader for videos
+### Step 1: Custom Data loader for videos
 
 handling  video frames data sets wuth an   efficient data generation scheme that consume a less memory can be done  with e Dataset class (torch.utils.data.Dataset) in PyTorch  the idea  is  to privde a class that overriding two subclass functions
 
@@ -154,10 +154,28 @@ def capture(filename,timesep,rgb,h,w):
 
 Brief instructions explaining how to interpret the image.
 
-### Step 2: Optional: title for step - ordered list
+### Step 2: understand timedistrbution warpper 
 
-Lead-in sentence for an ordered list:
+as we know  that  most of the pre-trained Conv  based models are Conv2d  where it accept only  a 3d shape  (rgb , height , width )
+while video data  each video is a 4d tensor  (frames , rgb , height , width )   ,  also  we know that   we need the pretrained model for spatial feature extraction and will feed it output to a temproal   layer such as (lstm)  
+if we ignore the batch size from our calculations than The Time Distribution operation applies the same operation for each group of tensors. The tensor here represents one frame, in the base model, the group of tensors is consist of 30 consecutive frames represented with a shape of (frames , rgb , height , width ) . Each video (a group of tensors) get into the vgg19   as a frame by frame each with the shape of (rgb , height , width ) the vg19  apply same weight same calculation for that group of tensors the calculations changed once new group received. The output of the time distributed vgg19   is a 2d tensor that is feed into the LSTM  
 
+in code the idea is so simple  we just itreat over each frame and feed it  as frame by frame item t the conv base model
+from that   i have two  idea to implment this
+
+the first one   ( consume more memory from the gpu  but learn better then the second one)
+
+```
+ # reshape input  to be (batch_size * timesteps, input_size)
+ x = x.contiguous().view(batch_size * time_steps, C, H, W)
+ # feed to the pre-trained conv model
+ x = self.baseModel(x)
+ # flatten the output
+ x = x.view(x.size(0), -1)
+ # make the new correct shape (batch_size , timesteps , output_size)
+ x = x.contiguous().view(batch_size , time_steps , x.size(-1))  # this x is now ready to be entred or feed into lstm layer
+```
+ 
 1. Substep A
 1. Substep B
 1. Substep C
