@@ -385,23 +385,4 @@ model = nn.Sequential(TimeWarp(baseModel),
         )
 ```
 
-1. Substep A
-1. Substep B
-1. Substep C
-
-### Step 3: Optional: title for step - code snippet
-
-Lead-in sentence explaining the code snippet. For example: 
-
-Run the `apt` command to install the Asciidoctor package and check the version.
-
-```
-$ sudo apt install asciidoctor
-
-$ asciidoctor --version
-Asciidoctor 1.5.6.2 [https://asciidoctor.org]
-```
-
-### Step 4: Optional: title for step - Conclusion
-
-Provide a summary of the steps completed and explain what the user has achieved by following them. You can also include links to related articles that may help the reader reinforce concepts discussed in this how-to article.
+thats it now all done   >>  thanks for your time
