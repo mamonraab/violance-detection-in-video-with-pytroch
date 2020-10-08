@@ -149,7 +149,7 @@ def capture(filename,timesep,rgb,h,w):
 
 
 
-### Step 2: understand timedistrbution 
+### Step 2: bulding the timedistrbution warper and integrate it into the  pytroch model
 
 as we know  that  most of the pre-trained Conv  based models are Conv2d  where it accept only  a 3d shape  (rgb , height , width )
 while video data  each video is a 4d tensor  (frames , rgb , height , width )   ,  also  we know that   we need the pretrained model for spatial feature extraction and will feed it output to a temproal   layer such as (lstm)  
@@ -288,6 +288,102 @@ class Net2(nn.Module):
         return x 
 ```
 
+well the above is so ugly  i want to make class that  can do the time-distrbution  with the two methods 
+lets do it
+
+```
+class TimeWarp(nn.Module):
+    def __init__(self, baseModel, method='sqeeze'):
+        super(TimeWarp, self).__init__()
+        self.baseModel = baseModel
+        self.method = method
+ 
+    def forward(self, x):
+        batch_size, time_steps, C, H, W = x.size()
+        if self.method == 'loop':
+            output = []
+            for i in range(time_steps):
+                #input one frame at a time into the basemodel
+                x_t = self.baseModel(x[:, i, :, :, :])
+                # Flatten the output
+                x_t = x_t.view(x_t.size(0), -1)
+                output.append(x_t)
+            #end loop
+            #make output as  ( samples, timesteps, output_size)
+            x = torch.stack(output, dim=0).transpose_(0, 1)
+            output = None # clear var to reduce data  in memory
+            x_t = None  # clear var to reduce data  in memory
+        else:
+            # reshape input  to be (batch_size * timesteps, input_size)
+            x = x.contiguous().view(batch_size * time_steps, C, H, W)
+            x = self.baseModel(x)
+            x = x.view(x.size(0), -1)
+            #make output as  ( samples, timesteps, output_size)
+            x = x.contiguous().view(batch_size , time_steps , x.size(-1))
+        return x
+
+```
+
+so if we want to use our class  for example with   nn.Sequential  the code can be like this
+
+
+```
+baseModel = models.vgg19(pretrained=pretrained).features
+
+model = nn.Sequential(TimeWarp(baseModel))
+```
+
+now let say  we want to build complate model from this   using cnn+lstm
+first i found that  there is  a users that have  problems  intgrating  lstm in   nn.Sequential     you can see the qustion in stackoverflow link
+https://stackoverflow.com/questions/44130851/simple-lstm-in-pytorch-with-sequential-module
+i did awnsered them qustion when i  creating this artical so any one can use these code  
+the idea is simple  pytorch   make i big  place for us to do our clas and ingrate them 
+i make this class to extract the last output from lstm  in get it back to  the Sequential  see this code
+
+
+```
+class extractlastcell(nn.Module):
+    def forward(self,x):
+        out , _ = x
+        return out[:, -1, :]
+```
+
+now the full model code can be lke this
+
+
+```
+# Create model
+
+num_classes = 1
+dr_rate= 0.2
+pretrained = True
+rnn_hidden_size = 30
+rnn_num_layers = 2
+baseModel = models.vgg19(pretrained=pretrained).features
+i = 0
+for child in baseModel.children():
+    if i < 28:
+        for param in child.parameters():
+            param.requires_grad = False
+    else:
+        for param in child.parameters():
+            param.requires_grad = True
+    i +=1
+
+num_features = 12800
+
+# Example of using Sequential
+model = nn.Sequential(TimeWarp(baseModel),
+                       nn.Dropout(dr_rate),
+                      nn.LSTM(num_features, rnn_hidden_size, rnn_num_layers , batch_first=True),
+                      extractlastcell(),
+                        nn.Linear(30, 256),
+                      nn.ReLU(),
+                       nn.Dropout(dr_rate),
+ nn.Linear(256, num_classes)
+
+        )
+```
 
 1. Substep A
 1. Substep B
