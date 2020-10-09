@@ -1,4 +1,4 @@
-# fire-detection-in-video-with-pytroch
+# violance-detection-in-video-with-pytroch
 
 <!-- Copy this Template. -->
 <!-- Describe the title of your article by replacing "How-to Template" with the page name you want to publish to. -->
@@ -6,9 +6,9 @@
 
 ## Overview
 
-In these  tutorial  we are going to build a fire detation model based on videos  , since videos is a very important  soruce for rish informations and there is  deffrent kind of appliactions  that  can help  to improve socity life   , I choice fire detaction   since I have published a paper  in 2019  for that topic and I was need to addrress some of  topics that I faced when I build the detactor  (most of the online pytorch based  solution for  feeding  4d tensor to conv2d is  empgous and  also not working well  i choice the topic  to give you well tested solution that you can work with any video data and use the cnn+lstm  with easy and efficaint way )
+In these  tutorial  we are going to build a violance detation model based on videos  , since videos is a very important  soruce for rish informations and there is  deffrent kind of appliactions  that  can help  to improve socity life   , I choice violance detaction   since I have published a paper  in 2019  for that topic and I was need to addrress some of  topics that I faced when I build the detactor  (most of the online pytorch based  solution for  feeding  4d tensor to conv2d is  empgous and  also not working well  i choice the topic  to give you well tested solution that you can work with any video data and use the cnn+lstm  with easy and efficaint way )
 
-but before we deep dive  i want to declare that  Fire recognition in video is a problem of spatiotemporal features classification once a model can recognize the spatiotemporal features correctly; it can achieve a good result. 
+but before we deep dive  i want to declare that  violance recognition in video is a problem of spatiotemporal features classification once a model can recognize the spatiotemporal features correctly; it can achieve a good result. 
 The most common ways in deep-learning approach to capture and learn spatiotemporal features are: -
 
 1.  CNN and LSTM: -  it uses the Convolutional neural network   as a spatial features extractor, then the extracted features feed into LSTM Layer to learn the temporal relation than using any classification layer such as  ANN or any other approach for learning and classification. This approach can benefit from transfer learning by using a pre-trained model in the CNN layer such as vgg19 , resnet  and other pre-trained models to extract the general spatial features. The transfer learning approach  is a very effective method to build a model with high accuracy, especially when there Is limited small data.
@@ -23,7 +23,7 @@ so the topics of the tutorial as fellows :
 2.  warping video as a 3d input into  normal conv2d layers this called in keras as ( timedistbuted warper )
 3. transffer learning with pytorch
 
-please note that our goal is to keep it simple as ppossible also i didn't like to re-use  same  architcture i used in my aper which gain the stae of the art result in the fire detaction  to leave some  roome to you to improve accuracy and gain better results  the paper  is in this url https://www.researchgate.net/publication/337274826_Robust_Real-Time_Fire_Detector_Using_CNN_And_LSTM
+please note that our goal is to keep it simple as ppossible also i didn't like to re-use  same  architcture i used in my aper which gain the stae of the art result in the violance detaction  to leave some  roome to you to improve accuracy and gain better results  the paper  is in this url https://www.researchgate.net/publication/336156932_Robust_Real-Time_Violence_Detection_in_Video_Using_CNN_And_LSTM
 
 **Keywords:** Optionally add comma-separated keywords.
 
@@ -33,9 +33,8 @@ Make sure you meet the following prerequisites before starting the how-to steps:
 
 * intermidate  pytorch level ( can create class for model , train and evalute modle )
 * Prerequisite two have ( pytorch , opencv , pandas ) installed
-* Prerequisite three i use 2 datasets   with combntion of some  videos from internet  the 2 datasets links is 
-https://zenodo.org/record/836749#.X3zWP3Vficw     https://mivia.unisa.it/datasets/video-analysis-datasets/fire-detection-dataset/   also i downloaded  videos from here  https://pixabay.com/videos/search/fire/
-
+* Prerequisite three i trained my model on  3 datasets  and mixed them to be one large data set  if you want to build or train your own model on same dataset 
+these data sets  are (Movies Fight Detection Dataset   https://academictorrents.com/details/70e0794e2292fc051a13f05ea6f5b6c16f3d3635  )  ,  (Hockey Fight Detection Dataset  https://academictorrents.com/details/38d9ed996a5a75a039b84cf8a137be794e7cee89  )  , and (VIOLENT-FLOWS DATABASE  https://www.openu.ac.il/home/hassner/data/violentflows/ )
 
   
 ## Step-by-step guide
