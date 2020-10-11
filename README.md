@@ -384,4 +384,13 @@ model = nn.Sequential(TimeWarp(baseModel),
         )
 ```
 
-thats it now all done   >>  thanks for your time
+thats it now all done   
+i've created a flask api   with a trained model  you can find it  at this url
+https://github.com/mamonraab/violance-detection-in-video-with-pytroch/tree/main/flaskapp
+
+the flask files are (web-fight.py  , mamonfight22.py)   
+and i make a client example which send the video file to the desired api point  the client in (client.py
+)
+you can check it and use it for your  work.
+
+>>  thanks for your time
