@@ -25,7 +25,7 @@ so the topics of the tutorial as fellows :
 
 please note that our goal is to keep it simple as ppossible also i didn't like to re-use  same  architcture i used in my aper which gain the stae of the art result in the violance detaction  to leave some  roome to you to improve accuracy and gain better results  the paper  is in this url https://www.researchgate.net/publication/336156932_Robust_Real-Time_Violence_Detection_in_Video_Using_CNN_And_LSTM
 
-**Keywords:** Optionally add comma-separated keywords.
+
 
 ## Before you start
 
@@ -340,8 +340,8 @@ now let say  we want to build complate model from this   using cnn+lstm
 first i found that  there is  a users that have  problems  intgrating  lstm in   nn.Sequential     you can see the qustion in stackoverflow link
 https://stackoverflow.com/questions/44130851/simple-lstm-in-pytorch-with-sequential-module
 i did awnsered them qustion when i  creating this artical so any one can use these code  
-the idea is simple  pytorch   make i big  place for us to do our clas and ingrate them 
-i make this class to extract the last output from lstm  in get it back to  the Sequential  see this code
+the idea is simple  pytorch   make a big  place for us to do our class and ingrate them 
+i make this class to extract the last output from lstm  and get it back to  the Sequential  see this code
 
 
 ```
