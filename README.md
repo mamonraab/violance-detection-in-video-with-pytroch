@@ -112,8 +112,8 @@ class FireDataset(Dataset):
 
 ```
 the code is very simple  we get a pandas dataframe  contain ( file path , label of file )  and also we give the class the shape we wan the data to be  ,   we make a function i call it   ( capture )  it simply read the file from the path  and do normaliztion and shape it as we want and  extract only the needed (frames)  and return it as numpy array
-and than we return both the video  from capture and the label  after convert them to tensors 
-we need now a function called      and a dataframe cotain  path for videos with them label.
+and than we return both the video  from capture and the label  after convert them to tensors. 
+
 
 
 my code for ( capture ) function is 
