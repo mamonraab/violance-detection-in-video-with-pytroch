@@ -6,24 +6,25 @@
 
 ## Overview
 
-In these  tutorial  we are going to build a violance detation model based on videos  , since videos is a very important  soruce for rish informations and there is  deffrent kind of appliactions  that  can help  to improve socity life   , I choice violance detaction   since I have published a paper  in 2019  for that topic and I was need to addrress some of  topics that I faced when I build the detactor  (most of the online pytorch based  solution for  feeding  4d tensor to conv2d is  empgous and  also not working well  i choice the topic  to give you well tested solution that you can work with any video data and use the cnn+lstm  with easy and efficaint way )
+In this tutorial we are going to build a violence detection model based on videos since videos are a very important source for rich information and there is a different kind of applications that can help to improve society life, I choice violence detection since I have published a paper in 2019 for that topic and I needed to address some of the topics that I faced when I build the detector (most of the online PyTorch based solution for feeding 4d tensor to conv2d   not working well I choose the topic to give you a well-tested solution that you can work with any video data and use the cnn+lstm with easy and efficient way )
 
-but before we deep dive  i want to declare that  violance recognition in video is a problem of spatiotemporal features classification once a model can recognize the spatiotemporal features correctly; it can achieve a good result. 
-The most common ways in deep-learning approach to capture and learn spatiotemporal features are: -
 
-1.  CNN and LSTM: -  it uses the Convolutional neural network   as a spatial features extractor, then the extracted features feed into LSTM Layer to learn the temporal relation than using any classification layer such as  ANN or any other approach for learning and classification. This approach can benefit from transfer learning by using a pre-trained model in the CNN layer such as vgg19 , resnet  and other pre-trained models to extract the general spatial features. The transfer learning approach  is a very effective method to build a model with high accuracy, especially when there Is limited small data.
+but before we deep dive I want to declare that violence recognition in video is a problem of spatiotemporal features classification once a model can recognize the spatiotemporal features correctly; it can achieve a good result. 
+The most common ways in the deep-learning approach to capture and learn spatiotemporal features are: -
 
-2.  Convlutinal neurl network 3d (Conv3D)   several studies show the excellent ability for Conv3d to learn spatiotemporal relation, and it was able to outperform the (CNN and LSTM) approach. Conv3D convolved on four dimensions the time(frame) and height and width and colors channel. It is simple, fast, and more straightforward to train then (CNN and LSTM).
+1.  CNN and LSTM: -  it uses the Convolutional neural network as a spatial features extractor, then the extracted features feed into LSTM Layer to learn the temporal relation than using any classification layer such as  ANN or any other approach for learning and classification. This approach can benefit from transfer learning by using a pre-trained model in the CNN layer such as vgg19, resnet, and other pre-trained models to extract the general spatial features. The transfer learning approach is a very effective method to build a model with high accuracy, especially when there Is limited small data.
 
-3.  Convlutn-long shortterm memory (Convlstm)   it extends the LSTM model to have a convolutional structure in both input-to-state and state-to-state transitions. ConvLSTM can capture spatiotemporal correlations consistently. 
+2.  Convolutional neural network 3d (Conv3D)   several studies show the excellent ability for Conv3d to learn spatiotemporal relation, and it was able to outperform the (CNN and LSTM) approach. Conv3D convolved on four dimensions the time(frame) and height and width and colors channel. It is simple, fast, and more straightforward to train than (CNN and LSTM).
 
-Since we have small dataset our  best choice is to use a pre-trained CNN with  LSTM  puting that in minde  the  2d CNN can read a 3d input only (C,H,W) and we have a 4d daat which is (frames , c , h , w )  so we need to work around this by doing what kera call it  ( timedistbuted warper )
-so the topics of the tutorial as fellows :  
+3.  Convolution-long short-term memory (ConvLstm)   it extends the LSTM model to have a convolutional structure in both input-to-state and state-to-state transitions. ConvLSTM can capture spatiotemporal correlations consistently. 
+
+Since we have a small dataset our  best choice is to use a pre-trained CNN with  LSTM  putting that in mind  the  2d CNN can read a 3d input only (C, H, W) and we have a 4d data which is (frames, c , h , w )  so we need to work around this by doing what Keras call it  ( time-distributed warper )
+so the topics of the tutorial as follows :  
 1. bulding custom video data set loader in pytorch 
-2.  warping video as a 3d input into  normal conv2d layers this called in keras as ( timedistbuted warper )
+2.  warping video as a 3d input into  normal conv2d layers this called in keras as ( time-distributed warper )
 3. using LSTM inside   Sequential model in pytorch
 
-please note that our goal is to keep it simple as ppossible also i didn't like to re-use  same  architcture i used in my aper which gain the stae of the art result in the violance detaction  to leave some  roome to you to improve accuracy and gain better results  the paper  is in this url https://www.researchgate.net/publication/336156932_Robust_Real-Time_Violence_Detection_in_Video_Using_CNN_And_LSTM
+please note that our goal is to keep it simple as possible also I didn't like to re-use the same  architecture I used in my paper which gain the state of art result in the violence detection  to leave some  room for you to improve accuracy and gain better results  the paper  is in this URL https://www.researchgate.net/publication/336156932_Robust_Real-Time_Violence_Detection_in_Video_Using_CNN_And_LSTM
 
 
 
@@ -31,9 +32,9 @@ please note that our goal is to keep it simple as ppossible also i didn't like t
 
 Make sure you meet the following prerequisites before starting the how-to steps:
 
-* intermidate  pytorch level ( can create class for model , train and evalute modle )
-* Prerequisite two have ( pytorch , opencv , pandas ) installed
-* Prerequisite three i trained my model on  3 datasets  and mixed them to be one large data set  if you want to build or train your own model on same dataset 
+* intermediate  PyTorch level ( can create a class for a model, train, and evaluate model )
+* Prerequisite two have ( PyTorch, OpenCV, pandas ) installed
+* Prerequisite three I trained my model on  3 datasets  and mixed them to be one large data set  if you want to build or train your own model on the same dataset 
 these data sets  are (Movies Fight Detection Dataset   https://academictorrents.com/details/70e0794e2292fc051a13f05ea6f5b6c16f3d3635  )  ,  (Hockey Fight Detection Dataset  https://academictorrents.com/details/38d9ed996a5a75a039b84cf8a137be794e7cee89  )  , and (VIOLENT-FLOWS DATABASE  https://www.openu.ac.il/home/hassner/data/violentflows/ )
 
   
@@ -41,21 +42,21 @@ these data sets  are (Movies Fight Detection Dataset   https://academictorrents.
 
 ### Step 1: Custom Data loader for videos
 
-handling  video frames data sets wuth an   efficient data generation scheme that consume a less memory can be done  with e Dataset class (torch.utils.data.Dataset) in PyTorch  the idea  is  to privde a class that overriding two subclass functions
+handling  video frames data sets with an   efficient data generation scheme that consume less memory can be done  with e Dataset class (torch.utils.data.Dataset) in PyTorch  the idea  is  to provide a class that overriding two subclass functions
 
    __len__  – returns the size of the dataset
 
   __getitem__  – returns a sample from the dataset given an index.
 
 
-the main code or the scelton code   for the data is
+the main code or the skeleton code   for the data is
 
 
 ```
 from torch.utils.data import Dataset
 
-class FireDataset(Dataset):
-    """Fire dataset."""
+class VideoDataset(Dataset):
+    """Video dataset."""
 
     def __init__(self, ----):
 
@@ -71,9 +72,9 @@ class FireDataset(Dataset):
 
         return sample
 ```
-now   what we want to do is  we provide a path for the video file  to the above  class and make it read the video and  do some transformation and return it with it label actualy we have to options the first one is to rad videos and store diractily  which will  need more memory and use less processing , while the 2 option is to give file path and  when training begin the loadeer  will read data as batch by batch this will use less memory and more processing ( more time in training )  i use option 2 coz allways we can wait bet it will cost as more money to get GPU with high memory 
+now   what we want to do is  we provide a path for the video file  to the above  class and make it read the video and  do some transformation and return it with its label actually we have to options the first one is to read videos and store directly  which will  need more memory and use less processing, while the 2 option is to give file path and  when training begins the loader  will read data as a batch by batch this will use less memory and more processing ( more time in training ) I use option 2 coz   it will cost us more money to get GPU with high memory 
 
-accuroding to this   my class is like the fellwoing :
+according to this   my class is like the following :
 
 
 
@@ -81,8 +82,8 @@ accuroding to this   my class is like the fellwoing :
 ```
 from torch.utils.data import Dataset 
 
-class FireDataset(Dataset):
-    """Fire dataset."""
+class VideoDataset(Dataset):
+    """Video dataset."""
 
     def __init__(self, datas, timesep=30,rgb=3,h=120,w=120):
         """
@@ -111,8 +112,8 @@ class FireDataset(Dataset):
         return sample
 
 ```
-the code is very simple  we get a pandas dataframe  contain ( file path , label of file )  and also we give the class the shape we wan the data to be  ,   we make a function i call it   ( capture )  it simply read the file from the path  and do normaliztion and shape it as we want and  extract only the needed (frames)  and return it as numpy array
-and than we return both the video  from capture and the label  after convert them to tensors. 
+the code is very simple  we get a pandas data frame  contain ( file path, the label of file )  and also we give the class the shape we want the data to be,   we make a function I call it   ( capture )  it simply read the file from the path  and do normalization and shape it as we want and  extract only the needed (frames)  and return it as NumPy array
+and then we return both the video from capture and the label after converting them to tensors. 
 
 
 
@@ -152,17 +153,17 @@ def capture(filename,timesep,rgb,h,w):
 
 
 
-### Step 2: bulding the timedistrbution warper and integrate it into the  pytroch model
+### Step 2: building the time-distribution warper and integrate it into the  PyTorch model 
 
-as we know  that  most of the pre-trained Conv  based models are Conv2d  where it accept only  a 3d shape  (rgb , height , width )
-while video data  each video is a 4d tensor  (frames , rgb , height , width )   ,  also  we know that   we need the pretrained model for spatial feature extraction and will feed it output to a temproal   layer such as (lstm)  
-if we ignore the batch size from our calculations than The Time Distribution operation applies the same operation for each group of tensors. The tensor here represents one frame, in the base model, the group of tensors is consist of 30 consecutive frames represented with a shape of (frames , rgb , height , width ) . Each video (a group of tensors) get into the vgg19   as a frame by frame each with the shape of (rgb , height , width ) the vg19  apply same weight same calculation for that group of tensors the calculations changed once new group received. The output of the time distributed vgg19   is a 2d tensor that is feed into the LSTM  
+as we know  that  most of the pre-trained Conv  based models are Conv2d  where it accepts only  a 3d shape  (RGB, height, width )
+while video data  each video is a 4d tensor  (frames, RGB, height, width ),  also  we know that   we need the pre-trained model for spatial feature extraction and will feed it output to a temporal   layer such as (LSTM)  
+if we ignore the batch size from our calculations then The Time Distribution operation applies the same operation for each group of tensors. The tensor here represents one frame, in the base model, the group of tensors is consist of 30 consecutive frames represented with a shape of (frames, RGB, height, width ). Each video (a group of tensors) gets into the vgg19   as a frame by frame each with the shape of (RGB, height, width ) the vg19 applies the same weight and calculation for that group of tensors the calculations changed once new group received. The output of the time distributed vgg19   is a 2d tensor that is feed into the LSTM  
 
-in code the idea is so simple  we just itreat over each frame and feed it  as frame by frame item t the conv base model
-from that   i have two  idea to implment this
+in code the idea is so simple  we just iterate over each frame and feed it  as frame by frame item t the Conv2d base model
+from that, I have two ideas to implement this
 
-1. the first method   ( consume more memory from the gpu  )  the idea is to change the array from (batch,frame,rgb,height ,width)  to  (batch*frame , rgb,height ,width)   so each frame will by an itm that feed to the basemodel
-the main idea  can bee seen in this code
+1. the first method   ( consume more memory from the GPU  )  the idea is to change the array from (batch, frame, RGB, height, width)  to  (batch*frame, RGB, height, width)   so each frame will  be an item that feeds to the base model
+the main idea  can be seen  in this code
 
 ```
  # reshape input  to be (batch_size * timesteps, input_size)
@@ -221,8 +222,8 @@ class Net(nn.Module):
 ``` 
 
 
-2. the second options is to loop over frames   ( less memory  but slower than option one also noted that the option one  is  better at learning)
-the main idea  can bee seen in this code
+2. the second option is to loop over frames   ( less memory  but slower than option one also noted that option one  is  better at learning)
+the main idea  can be seen in this code
 
 
 ```
@@ -291,7 +292,7 @@ class Net2(nn.Module):
         return x 
 ```
 
-well the above is so ugly  i want to make class that  can do the time-distrbution  with the two methods 
+well the above is so ugly I want to make a class that  can do the time-distribution  with the two methods 
 lets do it
 
 ```
@@ -327,7 +328,7 @@ class TimeWarp(nn.Module):
 
 ```
 
-so if we want to use our class  for example with   nn.Sequential  the code can be like this
+so if we want to use our class for example with  nn.Sequential  the code can be like this
 
 
 ```
@@ -336,12 +337,13 @@ baseModel = models.vgg19(pretrained=pretrained).features
 model = nn.Sequential(TimeWarp(baseModel))
 ```
 
-now let say  we want to build complate model from this   using cnn+lstm
-first i found that  there is  a users that have  problems  intgrating  lstm in   nn.Sequential     you can see the qustion in stackoverflow link
+now let say we want to build a complete model  using cnn+lstm
+but first I want to address that there are users that have problems integrating  LSTM in   nn.Sequential     you can see the question in StackOverflow link
 https://stackoverflow.com/questions/44130851/simple-lstm-in-pytorch-with-sequential-module
-i did awnsered them qustion when i  creating this artical so any one can use these code  
-the idea is simple  pytorch   make a big  place for us to do our class and ingrate them 
-i make this class to extract the last output from lstm  and get it back to  the Sequential  see this code
+ 
+I did answer the   question when I creating this article so anyone can use this code  
+the idea is simple  PyTorch   make a big  place for us to do our class and ingrate them 
+I make this class to extract the last output from LSTM  and get it back to  the Sequential  see this code
 
 
 ```
@@ -351,7 +353,7 @@ class extractlastcell(nn.Module):
         return out[:, -1, :]
 ```
 
-now the full model code can be lke this
+now the full model code can be like this
 
 
 ```
@@ -388,8 +390,8 @@ model = nn.Sequential(TimeWarp(baseModel),
         )
 ```
 
-thats it now all done   
-i've created a flask api   with a trained model  you can find it  at this url
+that's it now all done  ,    
+I've created a Rest API   with a trained model  you can find it  at this URL
 https://github.com/mamonraab/violance-detection-in-video-with-pytroch/tree/main/flaskapp
 
 the flask files are (web-fight.py  , mamonfight22.py)   
@@ -397,4 +399,6 @@ and i make a client example which send the video file to the desired api point  
 )
 you can check it and use it for your  work.
 
->>  thanks for your time
+and ofcourse you can implement what you learned  and  train a your own model
+
+thanks for your time
