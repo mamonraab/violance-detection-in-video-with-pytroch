@@ -155,9 +155,9 @@ def capture(filename,timesep,rgb,h,w):
 
 ### Step 2: understand transfer learning and do it the right way 
 
-in deeplearning  we try to fit some objective function and optimize the solution itreativly , you can imagine it as a search for solution , one of the import point in these search for solution algorithem is the start point ( in neurl network is the initatied wights ) from these came the main idea of transffer learning ( if we can start from  a good start point using a prevouasly trained wights for simlier task ) and here come 2 different appoaches for these
-1- re-train a previously trained model
-2- keep some layers freezed and not train them and train only few layers 
+in deeplearning  we try to fit some objective function and optimize the solution iteratively , you can imagine it as a search for solution , one of the import point in these search for solution algorithem is the start point ( in neurl network is the initatied wights ) from these came the main idea of transffer learning ( if we can start from  a good start point using a prevouasly trained wights for simlier task ) and here come 2 different appoaches for these
+1.  re-train a previously trained model
+2.   keep some layers freezed and not train them and train only few layers 
 
 how you can decied what to do and how much layer your freez ( the idea of freezing layers  acctuly wide used when we use a Conv layers in the model as the mian idea of deep conv nets is the deeper you go the more speclized feature you will learn for the desried task while the ealriset layer learn genral  feature that maybe work in deffrent tasks )
 
@@ -165,16 +165,16 @@ to summary  as in  the Deep Learning  book "https://www.amazon.com/Deep-Learning
 
 now how you decide which approach you go with here is my golden rules that i work with and give me a greta result ( for computer vision where  the pretrained model is a Conv based model )
 
-1- when you have a very small data and  pre-trained model old task is very similiar to your current task
+1.   when you have a very small data and  pre-trained model old task is very similiar to your current task
 you can freez all the conv layers and train only your FNN  
 
-2- when you have a very small data and  pre-trained model old task is deiffrent  from your current task
+2.   when you have a very small data and  pre-trained model old task is deiffrent  from your current task
 you can freez about from 60% to 95%   the conv layers in the pre-trained model and train the rest layers with your FNN  
 
-3- when you have mide to large data and  pre-trained model old task is deiffrent  from your current task
+3.   when you have mide to large data and  pre-trained model old task is deiffrent  from your current task
 you can freez about from  0% to 10%  of the conv layers in the pre-trained model and train the rest layers with your FNN  
 
-4- when you have mide to large data and  pre-trained model is very similiar  to your current task
+4.   when you have mide to large data and  pre-trained model is very similiar  to your current task
 you can freez about from  10% to 65%  of the conv layers in the pre-trained model and train the rest layers with your FNN  
 
 now we know  the thory lets see   how in code we can play with  pre-trained models with pytorch
