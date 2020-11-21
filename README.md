@@ -19,10 +19,12 @@ The most common ways in the deep-learning approach to capture and learn spatiote
 3.  Convolution-long short-term memory (ConvLstm)   it extends the LSTM model to have a convolutional structure in both input-to-state and state-to-state transitions. ConvLSTM can capture spatiotemporal correlations consistently. 
 
 Since we have a small dataset our  best choice is to use a pre-trained CNN with  LSTM  putting that in mind  the  2d CNN can read a 3d input only (C, H, W) and we have a 4d data which is (frames, c , h , w )  so we need to work around this by doing what Keras call it  ( time-distributed warper )
-so the topics of the tutorial as follows :  
-1. bulding custom video data set loader in pytorch 
-2.  warping video as a 3d input into  normal conv2d layers this called in keras as ( time-distributed warper )
-3. using LSTM inside   Sequential model in pytorch
+
+so what we will learn can be summarized as follows :  
+1. bulding custom video data set loader in pytorch
+2. understand transfer learning and do it the right way
+3. warping video as a 3d input into  normal conv2d layers this called in keras as ( TimeDistributed warper )
+4. using LSTM inside   Sequential model in pytorch
 
 please note that our goal is to keep it simple as possible also I didn't like to re-use the same  architecture I used in my paper which gain the state of art result in the violence detection  to leave some  room for you to improve accuracy and gain better results  the paper  is in this URL https://www.researchgate.net/publication/336156932_Robust_Real-Time_Violence_Detection_in_Video_Using_CNN_And_LSTM
 
@@ -151,9 +153,71 @@ def capture(filename,timesep,rgb,h,w):
 
 ```
 
+### Step 2: understand transfer learning and do it the right way 
+
+in deeplearning  we try to fit some objective function and optimize the solution itreativly , you can imagine it as a search for solution , one of the import point in these search for solution algorithem is the start point ( in neurl network is the initatied wights ) from these came the main idea of transffer learning ( if we can start from  a good start point using a prevouasly trained wights for simlier task ) and here come 2 different appoaches for these
+1- re-train a previously trained model
+2- keep some layers freezed and not train them and train only few layers 
+
+how you can decied what to do and how much layer your freez ( the idea of freezing layers  acctuly wide used when we use a Conv layers in the model as the mian idea of deep conv nets is the deeper you go the more speclized feature you will learn for the desried task while the ealriset layer learn genral  feature that maybe work in deffrent tasks )
+
+to summary  as in  the Deep Learning  book "https://www.amazon.com/Deep-Learning-Adaptive-Computation-Machine/dp/0262035618/" (Transfer learning and domain adaptation refer to the situation where what has been learned in one setting … is exploited to improve generalization in another setting )
+
+now how you decide which approach you go with here is my golden rules that i work with and give me a greta result ( for computer vision where  the pretrained model is a Conv based model )
+
+1- when you have a very small data and  pre-trained model old task is very similiar to your current task
+you can freez all the conv layers and train only your FNN  
+
+2- when you have a very small data and  pre-trained model old task is deiffrent  from your current task
+you can freez about from 60% to 95%   the conv layers in the pre-trained model and train the rest layers with your FNN  
+
+3- when you have mide to large data and  pre-trained model old task is deiffrent  from your current task
+you can freez about from  0% to 10%  of the conv layers in the pre-trained model and train the rest layers with your FNN  
+
+4- when you have mide to large data and  pre-trained model is very similiar  to your current task
+you can freez about from  10% to 65%  of the conv layers in the pre-trained model and train the rest layers with your FNN  
+
+now we know  the thory lets see   how in code we can play with  pre-trained models with pytorch
+
+the first importnet part is to know the names of layers or blocks or number of them  from the pre-trained model since  freezing layers or blocks  deppend on the names of them and it deffrent from model to model
+
+here i will show you how to do it with densnet  you simply can print the model layers and check them names and do what ever you want to do with them
+
+```
+ #get only the conv layers from a pre-trained densenet169
+model = models.densenet169(pretrained=True).features
+# densenet169  contain 4 denseblock
+#you can simply freez any of these by disable the grad from theme like these freez mean not to train these layers
+# by default all layers are trainable
+#freezing the first block
+for param in model.denseblock1.parameters():
+            param.requires_grad = False
+
+```
+
+now what if model not have names or blocks for example vgg19  you must pring the model check the layers numbers and one you know the number of each layer you can loop over the model layers and freez the desired layers
+
+just like these here 
 
 
-### Step 2: building the time-distribution warper and integrate it into the  PyTorch model 
+```
+#get only the conv layers from a pre-trained densenet169
+baseModel = models.vgg19(pretrained=pretrained).features
+i = 0
+for child in baseModel.children():
+    if i < 28:
+        for param in child.parameters():
+            param.requires_grad = False
+    else:
+        for param in child.parameters():
+            param.requires_grad = True
+    i +=1
+
+```
+
+
+
+### Step 3: building the TimeDistributed warper and integrate it into the  PyTorch model 
 
 as we know  that  most of the pre-trained Conv  based models are Conv2d  where it accepts only  a 3d shape  (RGB, height, width )
 while video data  each video is a 4d tensor  (frames, RGB, height, width ),  also  we know that   we need the pre-trained model for spatial feature extraction and will feed it output to a temporal   layer such as (LSTM)  
