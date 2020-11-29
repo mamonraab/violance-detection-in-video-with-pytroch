@@ -44,7 +44,7 @@ these data sets  are (Movies Fight Detection Dataset   https://academictorrents.
   
 ## Step-by-step guide
 
-Note :- if you want a full video to fellow with please check these link taht fully describe these project https://youtu.be/MROlMtZayog
+Note :- if you want a full video to fellow with please check these link that fully describe these project https://youtu.be/MROlMtZayog
 
 ### Step 1: Custom Data loader for videos
 
