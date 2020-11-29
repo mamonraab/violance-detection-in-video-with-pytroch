@@ -131,7 +131,7 @@ def capture(filename,timesep,rgb,h,w):
         rval , frame = vc.read()
     else:
         rval = False
-    frm = resize(frame,(h, w,rgb))
+    frm = resize(frame,(h, w,rgb))  # resize is   =>    from skimage.transform import resize
     frm = np.expand_dims(frm,axis=0)
     frm = np.moveaxis(frm, -1, 1)
     if(np.max(frm)>1):
