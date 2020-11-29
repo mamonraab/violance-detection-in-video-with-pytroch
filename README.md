@@ -6,6 +6,8 @@
 
 ## Overview
 
+
+
 In this tutorial we are going to build a violence detection model based on videos since videos are a very important source for rich information and there is a different kind of applications that can help to improve society life, I choice violence detection since I have published a paper in 2019 for that topic and I needed to address some of the topics that I faced when I build the detector (most of the online PyTorch based solution for feeding 4d tensor to conv2d   not working well I choose the topic to give you a well-tested solution that you can work with any video data and use the cnn+lstm with easy and efficient way )
 
 
@@ -41,6 +43,8 @@ these data sets  are (Movies Fight Detection Dataset   https://academictorrents.
 
   
 ## Step-by-step guide
+
+Note :- if you want a full video to fellow with please check these link taht fully describe these project https://youtu.be/MROlMtZayog
 
 ### Step 1: Custom Data loader for videos
 
