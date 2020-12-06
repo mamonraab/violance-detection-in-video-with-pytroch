@@ -183,7 +183,7 @@ you can freez about from  10% to 65%  of the conv layers in the pre-trained mode
 
 now we know  the theory lets see   how in code we can play with  pre-trained models with pytorch
 
-to download a    pre-trained model   you can get it from video classification
+to download a    pre-trained model   you can get it from torchvision.models
 for example see these code
 
 ```
